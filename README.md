@@ -25,7 +25,7 @@ Upstream: https://github.com/python-semver/python-semver
 
 **收益来自哪一行（成本分解）**：`benchmark/decompose.py` 在同一份语料上把三种写法拆开测（98,970 次/轮，5 轮中位）：上游 `to_tuple()` 写法 **836.1 ns/op**；只把 tuple 换成直读 slot（仍构造 tuple）**368.5 ns/op**（2.27x）；再对三段数字短路比较 **208.1 ns/op**（4.02x）。仓库里发布的补丁是第三种写法加上 `type is Version` 守卫，经公开入口实测 455.2 ns/op；基线的公开入口是 1,055.8 ns/op。两者与裸函数之差（220–247 ns）是方法调用 + `isinstance` 类型派发，不是自然序比较本身——这是下一步唯一还有空间的地方，本轮只改一处，没有动它。
 
-**噪声披露**：1k 单次采样窗口只有约 1.1 ms，三轮基线相对标准差为 2.2% / 10.9% / 1.4%，优化后为 2.4% / 6.9% / 9.0%，轮间中位加速比 1.873–2.182，仍远高于 1.15x 门槛。10k / 100k 的三轮（两实现）相对标准差最大 1.43%；真实语料基线三轮 ≤0.80%，优化后为 0.71% / 3.63% / 0.98%（第 2 轮 3.63% 是唯一超过 1.5% 的组，该轮真实语料加速比仍为 2.226x）。逐轮数值见 `replication.json`。所有结论取 5 次中位数，不取最快值；warmup 不计入计时。
+**噪声披露**：1k 单次采样窗口只有约 1.1 ms，三轮基线相对标准差为 2.2% / 10.9% / 1.4%，优化后为 2.4% / 6.9% / 9.0%，轮间中位加速比 1.873–2.182，仍远高于 1.15x 门槛。10k / 100k 的三轮（两实现）相对标准差最大 1.43%；真实语料基线三轮 ≤0.80%，优化后为 0.71% / 3.63% / 0.98%（第 2 轮 3.63% 是唯一超过 1.5% 的组，该轮真实语料加速比仍为 2.226x）。逐轮数值见 `replication.json`。另在干净 `git clone --depth=1` 中独立跑一对完整基准（`benchmark/clean_clone_repro.json`）：1k 2.07x / 10k 2.19x / 100k 2.22x / 真实语料 2.35x，与仓库内数值一致（1k 因窗口最短，跨进程波动最大）。所有结论取 5 次中位数，不取最快值；warmup 不计入计时。
 
 ## 差分与闸门
 
@@ -80,7 +80,7 @@ PYTHONPATH=src python3 benchmark/bench.py --impl optimized --out benchmark/optim
 - 跨解释器：本机只有 CPython 3.12.3，无 3.10/3.11，**未做跨版本交叉**；不编造多版本数据。结论仅限 3.12
 - 计时：`time.perf_counter()`；种子 4321（版本构造确定性，无 RNG 状态）
 - 分解测量：`benchmark/decompose.py` → `benchmark/decompose.json`
-- 基线 / 优化样本：`benchmark/baseline.json`、`benchmark/optimized.json`、`benchmark/raw/*.json`（每份含 `n_ops`、`seconds`、`acc`、`seed`）、`benchmark/replication.json`（三轮汇总）、`benchmark/memcheck.json`（RSS 原始轮次）
+- 基线 / 优化样本：`benchmark/baseline.json`、`benchmark/optimized.json`、`benchmark/raw/*.json`（每份含 `n_ops`、`seconds`、`acc`、`seed`）、`benchmark/replication.json`（三轮汇总）、`benchmark/memcheck.json`（RSS 原始轮次）、`benchmark/clean_clone_repro.json`（干净 clone 独立复跑）
 
 ## 本轮创新
 

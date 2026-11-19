@@ -1,0 +1,37 @@
+{
+ "note": "one full benchmark pair executed in a fresh `git clone --depth=1` of this repository, independently of benchmark/replication.json's three rounds",
+ "command": [
+  "PYTHONPATH=src python3 benchmark/bench.py --impl baseline --out /tmp/sb2b.json --raw-dir /tmp/sb2raw",
+  "PYTHONPATH=src python3 benchmark/bench.py --impl optimized --out /tmp/sb2o.json --raw-dir /tmp/sb2raw"
+ ],
+ "scales": {
+  "1k": {
+   "baseline_median_s": 0.0012054061517119408,
+   "optimized_median_s": 0.0005827965214848518,
+   "speedup": 2.0683139093569074,
+   "baseline_rel_stdev": 0.03595670585799451,
+   "optimized_rel_stdev": 0.046100460553843634
+  },
+  "10k": {
+   "baseline_median_s": 0.011157016269862652,
+   "optimized_median_s": 0.00508985947817564,
+   "speedup": 2.192008702342734,
+   "baseline_rel_stdev": 0.018400081430226038,
+   "optimized_rel_stdev": 0.006410796244710542
+  },
+  "100k": {
+   "baseline_median_s": 0.11101773660629988,
+   "optimized_median_s": 0.050076015293598175,
+   "speedup": 2.21698423797096,
+   "baseline_rel_stdev": 0.011595921989648419,
+   "optimized_rel_stdev": 0.039336600522552806
+  }
+ },
+ "real_corpus": {
+  "baseline_median_s": 0.10581307113170624,
+  "optimized_median_s": 0.04496013652533293,
+  "speedup": 2.3534864284072077,
+  "versions": 6599,
+  "n_ops": 98970
+ }
+}
