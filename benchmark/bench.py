@@ -83,7 +83,7 @@ def run_scale(fn, versions, scale, impl):
         for i in range(n_ops):
             fn(versions[i], versions[i + 1])
 
-    raw_dir = ROOT / "benchmark" / "raw"
+    raw_dir = Path(RAW_DIR)
     raw_dir.mkdir(parents=True, exist_ok=True)
     samples = []
     for rep in range(REPS):
@@ -110,11 +110,18 @@ def run_scale(fn, versions, scale, impl):
     }
 
 
+RAW_DIR = str(ROOT / "benchmark" / "raw")
+
+
 def main():
+    global RAW_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--impl", choices=["baseline", "optimized"], required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--raw-dir", default=str(ROOT / "benchmark" / "raw"))
     args = ap.parse_args()
+    RAW_DIR = args.raw_dir
+    Path(RAW_DIR).mkdir(parents=True, exist_ok=True)
 
     fn = baseline_compare if args.impl == "baseline" else (
         lambda a, b: a.compare(b))
@@ -135,10 +142,12 @@ def main():
     for label, n in SCALES.items():
         result["scales"][label] = run_scale(fn, make_versions(n + 1), label, args.impl)
 
-    real = json.loads((ROOT / "benchmark" / "corpus_real.json").read_text())["versions"]
+    corpus_meta = json.loads((ROOT / "benchmark" / "corpus_real.json").read_text())
+    real = corpus_meta["versions"]
     corpus = [Version.parse(v) for v in real]
+    repeats = max(1, 100_000 // (len(corpus) - 1))
     pairs = []
-    for _ in range(500):
+    for _ in range(repeats):
         pairs.extend(zip(corpus, corpus[1:]))
     # Reuse the same timed loop shape for a stable per-op number.
     for _ in range(WARMUP):
@@ -152,12 +161,12 @@ def main():
             acc += fn(a, b)
         dt = time.perf_counter() - t0
         samples.append(dt)
-        (ROOT / "benchmark" / "raw" / f"{args.impl}-real-{rep}.json").write_text(
+        (Path(RAW_DIR) / f"{args.impl}-real-{rep}.json").write_text(
             json.dumps({"impl": args.impl, "scale": "real", "rep": rep,
                         "n_ops": len(pairs), "seconds": dt, "acc": acc, "seed": SEED}))
     q = statistics.quantiles(samples, n=4)
     result["real_corpus"] = {
-        "versions": len(corpus), "pairs": len(pairs), "n_ops": len(pairs),
+        "versions": len(corpus), "repeats": repeats, "pairs": len(pairs), "n_ops": len(pairs),
         "samples_seconds": samples, "median": statistics.median(samples),
         "p25": q[0], "p75": q[2],
         "rel_stdev": statistics.pstdev(samples) / statistics.median(samples),

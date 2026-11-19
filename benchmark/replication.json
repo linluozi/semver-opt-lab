@@ -1,0 +1,94 @@
+{
+ "note": "three independent full benchmark rounds; round 1 is the canonical baseline.json/optimized.json pair in benchmark/raw/",
+ "rounds": [
+  {
+   "round": 1,
+   "scales": {
+    "1k": {
+     "baseline_median_s": 0.0011874036863446236,
+     "optimized_median_s": 0.0004887590184807777,
+     "speedup": 2.4294256299054307
+    },
+    "10k": {
+     "baseline_median_s": 0.011174287647008896,
+     "optimized_median_s": 0.004830151796340942,
+     "speedup": 2.313444404681841
+    },
+    "100k": {
+     "baseline_median_s": 0.11190116498619318,
+     "optimized_median_s": 0.0478339372202754,
+     "speedup": 2.339367643330049
+    }
+   },
+   "real_corpus": {
+    "baseline_median_s": 0.1050766333937645,
+    "optimized_median_s": 0.04445984400808811,
+    "speedup": 2.3634053546082843,
+    "versions": 6599,
+    "n_ops": 98970
+   }
+  },
+  {
+   "round": 2,
+   "scales": {
+    "1k": {
+     "baseline_median_s": 0.0011347029358148575,
+     "optimized_median_s": 0.0004936670884490013,
+     "speedup": 2.2985185003518396
+    },
+    "10k": {
+     "baseline_median_s": 0.011120917275547981,
+     "optimized_median_s": 0.004833906888961792,
+     "speedup": 2.3006064309890935
+    },
+    "100k": {
+     "baseline_median_s": 0.11110745370388031,
+     "optimized_median_s": 0.04812199994921684,
+     "speedup": 2.3088702427399532
+    }
+   },
+   "real_corpus": {
+    "baseline_median_s": 0.10361187160015106,
+    "optimized_median_s": 0.04460997600108385,
+    "speedup": 2.322616618256726,
+    "versions": 6599,
+    "n_ops": 98970
+   }
+  },
+  {
+   "round": 3,
+   "scales": {
+    "1k": {
+     "baseline_median_s": 0.0011521056294441223,
+     "optimized_median_s": 0.00048363953828811646,
+     "speedup": 2.382157657171907
+    },
+    "10k": {
+     "baseline_median_s": 0.011235764250159264,
+     "optimized_median_s": 0.004585281014442444,
+     "speedup": 2.4503981794724305
+    },
+    "100k": {
+     "baseline_median_s": 0.11106741614639759,
+     "optimized_median_s": 0.046022201888263226,
+     "speedup": 2.4133442466759174
+    }
+   },
+   "real_corpus": {
+    "baseline_median_s": 0.10294080898165703,
+    "optimized_median_s": 0.041878911666572094,
+    "speedup": 2.4580583612401936,
+    "versions": 6599,
+    "n_ops": 98970
+   }
+  }
+ ],
+ "environment": {
+  "cpu_model": "AMD EPYC 7K62 48-Core Processor",
+  "memory_kb": 3812564,
+  "python": "3.12.3",
+  "pytest": "9.2.0",
+  "timer": "time.perf_counter",
+  "seed": 4321
+ }
+}

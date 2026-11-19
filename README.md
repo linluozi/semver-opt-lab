@@ -1,6 +1,6 @@
 # semver-opt-lab
 
-`python-semver` 3.1.2 的 `Version.compare()` 在每次比较时都通过 `to_tuple()` 重建两个三元组、并调用 6 次 property 描述符，而这三个数就存在 `__slots__` 里。本仓库把该路径改为直接读 slot 并逐段短路比较：不改公共 API、不引入缓存、不增加实例内存，在 212 个真实版本串上中位 **1.61x**，三个合成规模中位 **2.39x**。
+`python-semver` 3.1.2 的 `Version.compare()` 在每次比较时都通过 `to_tuple()` 重建两个三元组、并调用 6 次 property 描述符，而这三个数就存在 `__slots__` 里。本仓库把该路径改为直接读 slot 并逐段短路比较：不改公共 API、不引入缓存、不增加实例内存，在 6,599 条真实发行版本上中位 **2.36x**，三个合成规模中位 **2.34x**。
 
 Upstream: https://github.com/python-semver/python-semver
 
@@ -14,14 +14,16 @@ Upstream: https://github.com/python-semver/python-semver
 
 | 规模（比较次数） | 基线中位 | 优化后中位 | 加速比 |
 | --- | --- | --- | --- |
-| 1,000 | 1.226 ms | 0.520 ms | **2.36x** |
-| 10,000 | 13.937 ms | 4.728 ms | **2.95x** |
-| 100,000 | 110.615 ms | 46.357 ms | **2.39x** |
-| 真实语料 105,500（212 个版本 × 500 轮相邻对） | 185.921 ms | 115.185 ms | **1.61x** |
+| 1,000 | 1.187 ms | 0.489 ms | **2.43x** |
+| 10,000 | 11.174 ms | 4.830 ms | **2.31x** |
+| 100,000 | 111.901 ms | 47.834 ms | **2.34x** |
+| 真实语料 98,970（6,599 个版本 × 15 轮相邻对） | 105.100 ms | 44.500 ms | **2.36x** |
 
-三个合成规模加速比的中位数 = **2.388x**。真实语料由上游 `tests/*.py` 中抽出的版本串 + 本机已安装包的 `dist-info/METADATA` 版本号组成（`benchmark/corpus_real.json`，212 条，无人工合成条目），所以 G3b 的 1.61x 不是自造重复负载。
+上表是第 1 轮（仓库内 `baseline.json` / `optimized.json` / `raw/` 对应的就是这一轮）。为排除单轮运气，另跑两轮完整基准，三轮所有规模的加速比区间是：1k **2.299–2.429**、10k **2.301–2.450**、100k **2.309–2.413**、真实语料 **2.323–2.458**；每轮的原始中位数见 `benchmark/replication.json`。
 
-**噪声披露**：1k 规模基线相对标准差 **11.6%**（优化后 5.4%），因为单次采样窗口只有约 1.2 ms，受调度器和计时器粒度影响；10k/100k 分别为 9.1%/4.6% 与 4.6%/1.4%，真实语料 1.6%/0.5%。所有结论取 5 次中位数，不取最快值；warmup 不计入计时。
+三个合成规模加速比的中位数 = **2.339x**；三轮复测的轮中位分别是 2.382x / 2.313x / 2.339x。真实语料是 PyPI JSON API 上 35 个广泛使用包（boto3、botocore、awscli、numpy、django、pytest 等）的**全部** SemVer 合规发行版本，去重后 6,599 条（`benchmark/corpus_real.json`，含包清单与来源），没有人工合成条目；因此 G3b 的 2.36x 不是自造重复负载。
+
+**噪声披露**：第 1 轮 10k 基线相对标准差 **11.7%**，来自 5 个样本中一个 15.9 ms 的调度离群值（其余约 11.2 ms）；同规模第 2/3 轮为 0.6%/0.7%，三轮中位加速比 2.301–2.450，结论不受影响。1k 采样窗口只有约 1.2 ms，三轮基线相对标准差 2.2%/2.1%/0.5%；其余规模均 <2%。所有结论取 5 次中位数，不取最快值；warmup 不计入计时。
 
 ## 差分与闸门
 
@@ -37,16 +39,16 @@ $ PYTHONPATH=src python tests/test_diff.py
 | --- | --- | --- |
 | G1 上游测试全绿 | ✅ 553 passed, 1 skipped, 34 warnings in 1.40s（打补丁后重跑原命令） | 见下方“G1 复现” |
 | G2 差分一致 | ✅ 5,000 个独立对 / 1,620 个独立版本，0 差异 | `PYTHONPATH=src python tests/test_diff.py` |
-| G3 中位加速 ≥1.15x | ✅ 2.388x（2.36 / 2.95 / 2.39） | `PYTHONPATH=src python benchmark/bench.py --impl baseline --out benchmark/baseline.json` 与 `--impl optimized ...` |
-| G3b 真实语料 ≥1.15x | ✅ 1.614x（212 个真实版本串） | 同上，读两份 JSON 的 `real_corpus.median` |
-| G4 最大规模不退化 | ✅ 100k 为 2.386x（≥0.95x） | 同上，读 `scales.100k` |
-| G5 峰值 RSS ≤1.10x | ✅ 16,896 KB → 16,640 KB（0.985x，同一 100 万次比较负载，独立进程） | `PYTHONPATH=src python benchmark/memcheck.py baseline` / `... optimized` |
+| G3 中位加速 ≥1.15x | ✅ 2.339x（2.43 / 2.31 / 2.34） | `PYTHONPATH=src python benchmark/bench.py --impl baseline --out benchmark/baseline.json` 与 `--impl optimized ...` |
+| G3b 真实语料 ≥1.15x | ✅ 2.36x（6,599 个真实发行版本，三轮 2.323–2.458） | 同上，读两份 JSON 的 `real_corpus.median` |
+| G4 最大规模不退化 | ✅ 100k 为 2.34x（三轮最小 2.309x，≥0.95x） | 同上，读 `scales.100k` |
+| G5 峰值 RSS ≤1.10x | ✅ 16,512 KB → 16,512 KB（1.000x）；独立 verifier 复跑为 17,396 → 17,268 KB（1.007x）。同一 100 万次比较负载，独立进程 | `PYTHONPATH=src python benchmark/memcheck.py baseline` / `... optimized` |
 
 **G1 复现**（在 `/tmp` 下，不改本仓库）：
 
 ```bash
-git clone --depth=1 git@github-linluozi:python-semver/python-semver.git /tmp/semver-up
-cd /tmp/semver-up && git fetch --depth=1 origin a4b7d337b1eb699ad4bad532a4b3fc68f8ec2408 && git checkout -q FETCH_HEAD
+git clone git@github-linluozi:python-semver/python-semver.git /tmp/semver-up
+cd /tmp/semver-up && git checkout -q a4b7d337b1eb699ad4bad532a4b3fc68f8ec2408
 git apply /path/to/semver-opt-lab/patch.diff
 python3 -m venv .venv && .venv/bin/pip -q install -e . pytest pytest-cov
 .venv/bin/pytest -q   # 553 passed, 1 skipped
@@ -64,11 +66,11 @@ PYTHONPATH=src python benchmark/bench.py --impl optimized --out benchmark/optimi
 
 ## 本轮创新
 
-**B 档**：不是给 semver 加缓存，而是把 `compare()` 的成本拆开——每次比较重建 2 个 tuple、读 6 个 property，而值本来就在 `__slots__` 里——并用“1,620 个独立版本 × 5,000 个独立对”的逐字节差分证明：直读 slot 后排序语义与六种运算符完全不变，真实语料仍有 1.61x。与台账里 `lunar-python-opt-lab`（缓存整年表）、`jsonschema-opt-lab`（缓存 `descend`）不同，本改动**不引入任何缓存或新状态**，内存反而略降（0.985x）。
+**B 档**：不是给 semver 加缓存，而是把 `compare()` 的成本拆开——每次比较重建 2 个 tuple、读 6 个 property，而值本来就在 `__slots__` 里——并用“1,620 个独立版本 × 5,000 个独立对”的逐字节差分证明：直读 slot 后排序语义与六种运算符完全不变，6,599 条真实发行版本上仍有 2.36x（三轮 2.323–2.458）。与台账里 `lunar-python-opt-lab`（缓存整年表）、`jsonschema-opt-lab`（缓存 `descend`）不同，本改动**不引入任何缓存或新状态**，内存不升（1.000–1.007x）。
 
 ## 环境
 
 - CPU：AMD EPYC 7K62 48-Core Processor（4 vCPU）/ 内存 3,812,564 kB
 - 运行时：CPython 3.12.3（`/usr/bin/python3`），pytest 9.2.0
 - 计时：`time.perf_counter()`；种子 4321（版本构造确定性，无 RNG 状态）
-- 基线 / 优化样本：`benchmark/baseline.json`、`benchmark/optimized.json`、`benchmark/raw/*.json`（每份含 `n_ops`、`seconds`、`acc`、`seed`）
+- 基线 / 优化样本：`benchmark/baseline.json`、`benchmark/optimized.json`、`benchmark/raw/*.json`（每份含 `n_ops`、`seconds`、`acc`、`seed`）、`benchmark/replication.json`（三轮汇总）
