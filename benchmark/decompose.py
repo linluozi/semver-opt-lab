@@ -43,10 +43,13 @@ def slots_short(a, b):
     if not r2: return -1
     return a._nat_cmp(r1, r2)
 
+def public_compare(a, b):
+    return a.compare(b)
+
 ref = [old_tuple(a, b) for a, b in pairs]
-assert ref == [slots_tuple(a, b) for a, b in pairs] == [slots_short(a, b) for a, b in pairs]
+assert ref == [slots_tuple(a, b) for a, b in pairs] == [slots_short(a, b) for a, b in pairs] == [public_compare(a, b) for a, b in pairs]
 out = {"n_ops_per_rep": len(pairs), "reps": 5, "warmup": 3, "timer": "time.perf_counter", "variants": {}}
-for name, fn in (("upstream_to_tuple", old_tuple), ("slots_tuple", slots_tuple), ("slots_short_circuit", slots_short)):
+for name, fn in (("upstream_to_tuple", old_tuple), ("slots_tuple", slots_tuple), ("slots_short_circuit", slots_short), ("patched_public_compare", public_compare)):
     for _ in range(3):
         for a, b in pairs: fn(a, b)
     samples = []

@@ -1,0 +1,7 @@
+# G1: upstream python-semver at a4b7d337b1eb699ad4bad532a4b3fc68f8ec2408 + patch.diff
+# command: python -m pytest -q -o addopts="--doctest-glob='*.rst' --doctest-modules --doctest-report ndiff"
+# env: CPython 3.12.3, pytest 
+  <doctest determine-version-equality.rst[1]>:1: DeprecationWarning: Equality comparisons between Version and strings, tuples or lists are deprecated and will be removed in semver 4; convert strings with Version.parse() and tuples with Version(*parts). See details in issue #506.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+553 passed, 1 skipped, 34 warnings in 0.76s

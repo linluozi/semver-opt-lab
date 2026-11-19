@@ -1,1 +1,1 @@
-{"impl": "baseline", "scale": "10k", "rep": 4, "n_ops": 10000, "seconds": 0.01108470931649208, "acc": -10000, "seed": 4321}
+{"impl": "baseline", "scale": "10k", "rep": 4, "n_ops": 10000, "seconds": 0.011064262129366398, "acc": -10000, "seed": 4321}

@@ -96,8 +96,34 @@ def main():
             mismatches.append(["bytes-operand", raw])
         str_checks += 2
 
+    # Subclass semantics: overridden major/prerelease properties must still be
+    # honoured; this is why the patch falls back to the public accessors for
+    # any operand whose exact type is not Version.
+    class SubMajor(Version):
+        @property
+        def major(self):
+            return 99
+
+    class SubPre(Version):
+        @property
+        def prerelease(self):
+            return "zzz"
+
+    subclass_checks = 0
+    subclass_pairs = list(itertools.product(
+        [SubMajor(1, 2, 3), SubMajor(99, 0, 2)],
+        [SubMajor(1, 2, 4), SubMajor(99, 1, 2)])) + [
+        (SubPre(1, 0, 0, "alpha"), SubPre(1, 0, 0)),
+        (SubPre(1, 0, 0), SubPre(1, 0, 0, "zzz")),
+    ]
+    for a, b in subclass_pairs:
+        if reference_compare(a, b) != a.compare(b):
+            mismatches.append(["subclass", a.to_tuple(), b.to_tuple()])
+        subclass_checks += 1
+
     result = {
         "distinct_versions": distinct_versions,
+        "subclass_pairs": subclass_checks,
         "distinct_pairs": len(pair_seen),
         "compare_calls": checked,
         "str_bytes_operand_checks": str_checks,

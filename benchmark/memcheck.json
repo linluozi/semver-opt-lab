@@ -1,0 +1,11 @@
+{
+ "command": "PYTHONPATH=src python3 benchmark/memcheck.py baseline|optimized",
+ "workload": "1,000,000 compares over 10,000 Version objects, fresh process each run",
+ "runs": [
+  {"baseline_kb": 17152, "optimized_kb": 17024, "ratio": 1.0075},
+  {"baseline_kb": 17152, "optimized_kb": 16896, "ratio": 1.0151},
+  {"baseline_kb": 16896, "optimized_kb": 16896, "ratio": 1.0}
+ ],
+ "max_ratio": 1.0151,
+ "note": "ratios are computed per run (baseline_kb / optimized_kb); max_ratio 1.0151 <= 1.10"
+}

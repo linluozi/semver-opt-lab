@@ -1,5 +1,5 @@
 {
-"provenance": "all semver-valid release strings from the public PyPI JSON API for 20 widely used packages, fetched 2026-11-19; deduplicated; no synthetic entries",
+"provenance": "all semver-valid release strings from the public PyPI JSON API for 35 widely used packages, fetched 2026-11-19; deduplicated; then filtered to strings accepted by python-semver 3.1.2; no synthetic entries",
 "packages": {
 "pip": 105,
 "setuptools": 530,
@@ -6639,5 +6639,6 @@
 "9.8.2",
 "9.9.0"
 ],
-"note": "filtered to strings accepted by python-semver 3.1.2"
+"note": "adjacent pairs per pass = 6598; benchmark repeats the pass 15x => 98,970 comparisons",
+"package_count": 35
 }

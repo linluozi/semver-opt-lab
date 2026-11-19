@@ -504,17 +504,23 @@ build='build.10')
                 f"but got {type(other)}"
             )
 
-        # Compare the three numeric parts directly.  Routing them through
-        # to_tuple() rebuilt two tuples and invoked six property descriptors
-        # on every call; the stored slot values are identical and immutable.
-        if self._major != other._major:
-            return -1 if self._major < other._major else 1
-        if self._minor != other._minor:
-            return -1 if self._minor < other._minor else 1
-        if self._patch != other._patch:
-            return -1 if self._patch < other._patch else 1
-
-        rc1, rc2 = self._prerelease, other._prerelease
+        # Fast path for exact Version operands: read the values that are
+        # already in __slots__ instead of rebuilding two tuples and invoking
+        # six property descriptors on every call.  Subclasses may override
+        # those properties, so they keep the original accessor-based path.
+        if type(self) is Version and type(other) is Version:
+            if self._major != other._major:
+                return -1 if self._major < other._major else 1
+            if self._minor != other._minor:
+                return -1 if self._minor < other._minor else 1
+            if self._patch != other._patch:
+                return -1 if self._patch < other._patch else 1
+            rc1, rc2 = self._prerelease, other._prerelease
+        else:
+            x = _cmp(self.to_tuple()[:3], other.to_tuple()[:3])
+            if x:
+                return x
+            rc1, rc2 = self.prerelease, other.prerelease
         if rc1 == rc2:
             return 0
         if not rc1:
