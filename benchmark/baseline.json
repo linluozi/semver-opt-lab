@@ -1,0 +1,90 @@
+{
+ "impl": "baseline",
+ "seed": 4321,
+ "warmup": 3,
+ "reps": 5,
+ "timer": "time.perf_counter",
+ "python": "3.12.3",
+ "platform": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+ "cpu": "x86_64",
+ "scales": {
+  "1k": {
+   "n_ops": 1000,
+   "samples_seconds": [
+    0.0015110606327652931,
+    0.0014702240005135536,
+    0.001191609539091587,
+    0.0011877324432134628,
+    0.0012263543903827667
+   ],
+   "median": 0.0012263543903827667,
+   "p25": 0.001189670991152525,
+   "p75": 0.0014906423166394234,
+   "stdev": 0.00014267854366580853,
+   "rel_stdev": 0.11634364812056983,
+   "ns_per_op": 1226.3543903827667
+  },
+  "10k": {
+   "n_ops": 10000,
+   "samples_seconds": [
+    0.01485067792236805,
+    0.014357279986143112,
+    0.013937301002442837,
+    0.012596259824931622,
+    0.011366917751729488
+   ],
+   "median": 0.013937301002442837,
+   "p25": 0.011981588788330555,
+   "p75": 0.014603978954255581,
+   "stdev": 0.0012717400502008798,
+   "rel_stdev": 0.0912472256987187,
+   "ns_per_op": 1393.7301002442837
+  },
+  "100k": {
+   "n_ops": 100000,
+   "samples_seconds": [
+    0.10988522414118052,
+    0.11019866354763508,
+    0.1164717748761177,
+    0.11061500664800406,
+    0.12296274863183498
+   ],
+   "median": 0.11061500664800406,
+   "p25": 0.1100419438444078,
+   "p75": 0.11971726175397635,
+   "stdev": 0.005084814513762808,
+   "rel_stdev": 0.04596857757233213,
+   "ns_per_op": 1106.1500664800406
+  }
+ },
+ "real_corpus": {
+  "versions": 212,
+  "pairs": 105500,
+  "n_ops": 105500,
+  "samples_seconds": [
+   0.18509909883141518,
+   0.18592105247080326,
+   0.19278748240321875,
+   0.18870992679148912,
+   0.1848108759149909
+  ],
+  "median": 0.18592105247080326,
+  "p25": 0.18495498737320304,
+  "p75": 0.19074870459735394,
+  "rel_stdev": 0.016118713494170222,
+  "ns_per_op": 1762.284857543159
+ },
+ "cpu_model": "AMD EPYC 7K62 48-Core Processor",
+ "memory_kb": 3812564,
+ "command": "PYTHONPATH=src python benchmark/bench.py --impl baseline --out benchmark/baseline.json",
+ "upstream_tests": {
+  "command": "/tmp/venv-algo/bin/pytest -q",
+  "result": "553 passed, 1 skipped, 34 warnings in 1.40s",
+  "when": "after applying patch.diff to base commit a4b7d337b1eb699ad4bad532a4b3fc68f8ec2408"
+ },
+ "memory_check": {
+  "command": "PYTHONPATH=src python benchmark/memcheck.py <impl>",
+  "baseline_kb": 16896,
+  "optimized_kb": 16640
+ }
+}

@@ -1,0 +1,29 @@
+diff --git a/src/semver/version.py b/src/semver/version.py
+index f207d31..8d7e276 100644
+--- a/src/semver/version.py
++++ b/src/semver/version.py
+@@ -504,13 +504,17 @@ build='build.10')
+                 f"but got {type(other)}"
+             )
+ 
+-        v1 = self.to_tuple()[:3]
+-        v2 = other.to_tuple()[:3]
+-        x = _cmp(v1, v2)
+-        if x:
+-            return x
+-
+-        rc1, rc2 = self.prerelease, other.prerelease
++        # Compare the three numeric parts directly.  Routing them through
++        # to_tuple() rebuilt two tuples and invoked six property descriptors
++        # on every call; the stored slot values are identical and immutable.
++        if self._major != other._major:
++            return -1 if self._major < other._major else 1
++        if self._minor != other._minor:
++            return -1 if self._minor < other._minor else 1
++        if self._patch != other._patch:
++            return -1 if self._patch < other._patch else 1
++
++        rc1, rc2 = self._prerelease, other._prerelease
+         if rc1 == rc2:
+             return 0
+         if not rc1:
