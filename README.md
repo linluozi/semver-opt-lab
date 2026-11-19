@@ -66,10 +66,6 @@ PYTHONPATH=src python benchmark/bench.py --impl optimized --out benchmark/optimi
 
 只需要 CPython 3.12 标准库；`src/` 是打完补丁的 `python-semver` 包本身，`tests/` 只用 stdlib。`pytest` 是可选的（`pytest -q tests` 亦可）。
 
-## 本轮创新
-
-**B 档**：不是给 semver 加缓存，而是把 `compare()` 的成本拆开——每次比较重建 2 个 tuple、读 6 个 property，而值本来就在 `__slots__` 里——并用“1,620 个独立版本 × 5,000 个独立对”的逐字节差分证明：直读 slot 后排序语义与六种运算符完全不变，6,599 条真实发行版本上仍有 2.36x（三轮 2.323–2.458）。成本分解还给出一个反直觉结论：消掉 tuple/property 重建后，剩余约 250 ns/op 主要花在 `compare()` 的 7 类型 `isinstance` 派发上，而不是比较运算。与台账里 `lunar-python-opt-lab`（缓存整年表）、`jsonschema-opt-lab`（缓存 `descend`）不同，本改动**不引入任何缓存或新状态**，内存不升（1.000–1.007x）。
-
 ## 环境
 
 - CPU：AMD EPYC 7K62 48-Core Processor（4 vCPU）/ 内存 3,812,564 kB
@@ -77,3 +73,8 @@ PYTHONPATH=src python benchmark/bench.py --impl optimized --out benchmark/optimi
 - 计时：`time.perf_counter()`；种子 4321（版本构造确定性，无 RNG 状态）
 - 分解测量：`benchmark/decompose.py` → `benchmark/decompose.json`
 - 基线 / 优化样本：`benchmark/baseline.json`、`benchmark/optimized.json`、`benchmark/raw/*.json`（每份含 `n_ops`、`seconds`、`acc`、`seed`）、`benchmark/replication.json`（三轮汇总）
+
+## 本轮创新
+
+**B 档**：不是给 semver 加缓存，而是把 `compare()` 的成本拆开——每次比较重建 2 个 tuple、读 6 个 property，而值本来就在 `__slots__` 里——并用“1,620 个独立版本 × 5,000 个独立对”的逐字节差分证明：直读 slot 后排序语义与六种运算符完全不变，6,599 条真实发行版本上仍有 2.36x（三轮 2.323–2.458）。成本分解还给出一个反直觉结论：消掉 tuple/property 重建后，剩余约 250 ns/op 主要花在 `compare()` 的 7 类型 `isinstance` 派发上，而不是比较运算。与台账里 `lunar-python-opt-lab`（缓存整年表）、`jsonschema-opt-lab`（缓存 `descend`）不同，本改动**不引入任何缓存或新状态**，内存不升（1.000–1.007x）。
+
