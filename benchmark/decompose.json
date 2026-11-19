@@ -52,5 +52,6 @@
    "ns_per_op": 570.5148562061747,
    "speedup_vs_upstream": 1.4655099427236138
   }
- }
+ },
+ "note": "patched_public_compare is a.check(b) wrapped in an extra Python function; the canonical per-op figure for the shipped method is 455.2 ns (benchmark/optimized.json real_corpus median / n_ops), not this variant's 570.5 ns"
 }
