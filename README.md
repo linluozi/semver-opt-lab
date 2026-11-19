@@ -4,6 +4,8 @@
 
 Upstream: https://github.com/python-semver/python-semver
 
+**Upstream PR:** https://github.com/python-semver/python-semver/pull/518 (open, 2026-11-19)
+
 - 基线提交：`a4b7d337b1eb699ad4bad532a4b3fc68f8ec2408`（`python-semver` 3.1.2）
 - 补丁：`patch.diff`，`src/semver/version.py`，24 行（17+/7-），只动 `compare()` 一个函数
 - 许可证：上游 BSD-3-Clause 原文见 `LICENSE`，文末注明来源与改动范围
