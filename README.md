@@ -23,6 +23,8 @@ Upstream: https://github.com/python-semver/python-semver
 
 三个合成规模加速比的中位数 = **2.339x**；三轮复测的轮中位分别是 2.382x / 2.313x / 2.339x。真实语料是 PyPI JSON API 上 35 个广泛使用包（boto3、botocore、awscli、numpy、django、pytest 等）的**全部** SemVer 合规发行版本，去重后 6,599 条（`benchmark/corpus_real.json`，含包清单与来源），没有人工合成条目；因此 G3b 的 2.36x 不是自造重复负载。
 
+**收益来自哪一行（成本分解）**：`benchmark/decompose.py` 在同一份 6,599 版本语料上把三种写法拆开测（98,970 次/轮，5 轮中位）：上游 `to_tuple()` 写法 **810.1 ns/op**；只把 tuple 换成直读 slot（仍构造 tuple）**372.6 ns/op**（2.17x）；再对三段数字短路比较 **197.7 ns/op**（4.10x）。仓库里实际发布的补丁是第三种写法，经公开 `compare()` 入口调用时实测 449 ns/op，差额约 250 ns 是方法调用 + `isinstance` 类型派发，不是自然序比较本身——这也是下一步唯一还有空间的地方，但本轮只改一处，没有动它。
+
 **噪声披露**：第 1 轮 10k 基线相对标准差 **11.7%**，来自 5 个样本中一个 15.9 ms 的调度离群值（其余约 11.2 ms）；同规模第 2/3 轮为 0.6%/0.7%，三轮中位加速比 2.301–2.450，结论不受影响。1k 采样窗口只有约 1.2 ms，三轮基线相对标准差 2.2%/2.1%/0.5%；其余规模均 <2%。所有结论取 5 次中位数，不取最快值；warmup 不计入计时。
 
 ## 差分与闸门
@@ -66,11 +68,12 @@ PYTHONPATH=src python benchmark/bench.py --impl optimized --out benchmark/optimi
 
 ## 本轮创新
 
-**B 档**：不是给 semver 加缓存，而是把 `compare()` 的成本拆开——每次比较重建 2 个 tuple、读 6 个 property，而值本来就在 `__slots__` 里——并用“1,620 个独立版本 × 5,000 个独立对”的逐字节差分证明：直读 slot 后排序语义与六种运算符完全不变，6,599 条真实发行版本上仍有 2.36x（三轮 2.323–2.458）。与台账里 `lunar-python-opt-lab`（缓存整年表）、`jsonschema-opt-lab`（缓存 `descend`）不同，本改动**不引入任何缓存或新状态**，内存不升（1.000–1.007x）。
+**B 档**：不是给 semver 加缓存，而是把 `compare()` 的成本拆开——每次比较重建 2 个 tuple、读 6 个 property，而值本来就在 `__slots__` 里——并用“1,620 个独立版本 × 5,000 个独立对”的逐字节差分证明：直读 slot 后排序语义与六种运算符完全不变，6,599 条真实发行版本上仍有 2.36x（三轮 2.323–2.458）。成本分解还给出一个反直觉结论：消掉 tuple/property 重建后，剩余约 250 ns/op 主要花在 `compare()` 的 7 类型 `isinstance` 派发上，而不是比较运算。与台账里 `lunar-python-opt-lab`（缓存整年表）、`jsonschema-opt-lab`（缓存 `descend`）不同，本改动**不引入任何缓存或新状态**，内存不升（1.000–1.007x）。
 
 ## 环境
 
 - CPU：AMD EPYC 7K62 48-Core Processor（4 vCPU）/ 内存 3,812,564 kB
 - 运行时：CPython 3.12.3（`/usr/bin/python3`），pytest 9.2.0
 - 计时：`time.perf_counter()`；种子 4321（版本构造确定性，无 RNG 状态）
+- 分解测量：`benchmark/decompose.py` → `benchmark/decompose.json`
 - 基线 / 优化样本：`benchmark/baseline.json`、`benchmark/optimized.json`、`benchmark/raw/*.json`（每份含 `n_ops`、`seconds`、`acc`、`seed`）、`benchmark/replication.json`（三轮汇总）
